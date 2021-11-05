@@ -22,13 +22,50 @@ class Ui(QtWidgets.QMainWindow):
         self.pushButton_hello.clicked.connect( self.hello )   
         self.pushButton_Set_DAC_1.clicked.connect( self.set_DAC_1 )  
         self.pushButton_Set_DAC_2.clicked.connect( self.set_DAC_2 )  
-        self.pushButton_amp_off.clicked.connect( self.amp_off )
+        self.pushButton_amp_off.clicked.connect( self.amp_off )  
+        self.pushButton_amp_on.clicked.connect( self.amp_on )  
+        
+        self.pushButton_stepper_on.clicked.connect( self.stepper_on ) 
+        self.pushButton_stepper_off.clicked.connect( self.stepper_off )    
+        
+        self.pushButton_read_settings.clicked.connect( self.read_settings ) 
+        
         self.pushButton_read_serial_number.clicked.connect( self.read_serial_number )
         #find ports and populate combo box
         ports = serial.tools.list_ports.comports()
         for p in ports:
             self.comboBox_Port_Select.addItem(p.name, p)
         self.show() # Show the GUI
+    
+    
+    def read_settings(self):
+        test_str = 'read_settings\r\n'
+        self.textBrowser.append("OUT: " + test_str)
+        self.ser.write( test_str.encode('ascii') ) 
+        line =  self.ser.readline().decode('utf-8') 
+        while not line: #wait for pyboard to respond
+            line =  self.ser.readline().decode('utf-8') 
+        self.textBrowser.append( "In : " + line )
+        
+        
+    def stepper_on(self):
+        test_str = 'stepper_on\r\n'
+        self.textBrowser.append("OUT: " + test_str)
+        self.ser.write( test_str.encode('ascii') ) 
+        line =  self.ser.readline().decode('utf-8') 
+        while not line: #wait for pyboard to respond
+            line =  self.ser.readline().decode('utf-8') 
+        self.textBrowser.append( "In : " + line )
+        
+    def stepper_off(self):
+        test_str = 'stepper_off\r\n'
+        self.textBrowser.append("OUT: " + test_str)
+        self.ser.write( test_str.encode('ascii') ) 
+        line =  self.ser.readline().decode('utf-8') 
+        while not line: #wait for pyboard to respond
+            line =  self.ser.readline().decode('utf-8') 
+        self.textBrowser.append( "In : " + line )
+        
         
     def home_z(self):
         test_str = 'home_z\r\n'
@@ -57,6 +94,14 @@ class Ui(QtWidgets.QMainWindow):
             line =  self.ser.readline().decode('utf-8') 
         self.textBrowser.append( "In : " + line )
         
+    def amp_on(self):
+        test_str = 'amp_on\r\n'
+        self.textBrowser.append("OUT: " + test_str)
+        self.ser.write( test_str.encode('ascii') ) 
+        line =  self.ser.readline().decode('utf-8') 
+        while not line: #wait for pyboard to respond
+            line =  self.ser.readline().decode('utf-8') 
+        self.textBrowser.append( "In : " + line )
         
     def set_DAC_1(self):
         value = int( self.lineEdit_DAC1.text() )

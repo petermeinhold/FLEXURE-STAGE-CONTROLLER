@@ -46,7 +46,22 @@ conn = pyb.USB_VCP()
 
 photodiode_ADC = pyb.ADC(pyb.Pin.board.Y12)  #machine.ADC(pyb.Pin.board.Y12)
 
-
+def read_settings():
+        dframe = b"Stepper enable value: "
+        dframe +=  bytes( str( stepper_enable.value() ), 'utf-8')
+        dframe +=  b'\r\n'
+        
+        dframe = b"Voice coil amp enable value: "
+        dframe +=  bytes( str( amp_enable.value() ), 'utf-8')
+        dframe +=  b'\r\n'
+        
+        dframe = b"Z limit switch value: "
+        dframe +=  bytes( str( z_limit_switch.value() ), 'utf-8')
+        dframe +=  b'\r\n'
+        
+        
+        conn.write(dframe)
+    
 
     
 def move_z(steps, direction):
@@ -270,6 +285,22 @@ while True:
             conn.write("Amp has been disabled\r\n".encode('utf-8')) 
             
         
+        if  data_read == 'amp_on':
+            amp_enable.value(1)
+            recognized = 1
+            conn.write("Amp has been enabled\r\n".encode('utf-8')) 
+            
+        if  data_read == 'stepper_on':
+            stepper_enable.value(1)
+            recognized = 1
+            conn.write("Stepper has been enabled\r\n".encode('utf-8')) 
+        
+        if  data_read == 'stepper_off':
+            stepper_enable.value(0)
+            recognized = 1
+            conn.write("Stepper has been disabled\r\n".encode('utf-8')) 
+            
+        
         if data_read[0:6] == 'move_z':
             #conn.write("DOOOT\r\n".encode('utf-8')) 
             steps = data_read[6:]
@@ -292,6 +323,12 @@ while True:
         if data_read == 'home_z':
             recognized = 1
             home_z() 
+            
+        if data_read == 'read_settings':
+            recognized = 1
+            read_settings() 
+            
+ 
  
         if not recognized:
             response = "command is not recognized: " + data_read + "\r\n"
