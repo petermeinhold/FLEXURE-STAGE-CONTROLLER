@@ -1,23 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Aug 26 14:58:13 2021
-
-@author: phoo
-"""
-
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Jul 17 16:17:03 2021
-3d raster main
-@author: phoo
-"""
-
-# -*- coding: utf-8 -*-
 
 import pyb
 import machine 
 import time
 from pyb import Pin
+from pyb import Timer
 
 #stepper motor config#
 step_pin = Pin('X9', Pin.OUT) 
@@ -29,9 +15,22 @@ amp_enable = Pin('X4', Pin.OUT)
 # limit switch for z axis
 z_limit_switch = machine.Pin('X12', machine.Pin.IN, machine.Pin.PULL_UP) 
 
+class myDAC: #just a wrapper for pyb.DAC that adds a read function
+    def __init__( self, chan):
+        self.DAC = pyb.DAC(chan, bits=12)
+        self.value = 2048
+        self.DAC.write(2048) 
+    def write(self, value):
+        self.value = value
+        self.DAC.write(value) 
+    def read(self):
+        return self.value 
+        
+dac1= myDAC(1) #pin X5
+dac2= myDAC(2) #pin X6     
+#dac1= pyb.DAC(1, bits=12) #pin X5
+#dac2= pyb.DAC(2, bits=12) #pin X6 
 
-dac1= pyb.DAC(1, bits=12) #pin X5
-dac2= pyb.DAC(2, bits=12) #pin X6 
 dac2.write(0) 
 dac1.write(0) 
 sn_0 = Pin('X18', Pin.IN, Pin.PULL_DOWN) #serial number pins
@@ -46,23 +45,76 @@ conn = pyb.USB_VCP()
 
 photodiode_ADC = pyb.ADC(pyb.Pin.board.Y12)  #machine.ADC(pyb.Pin.board.Y12)
 
-def read_settings():
-        dframe = b"Stepper enable value: "
-        dframe +=  bytes( str( stepper_enable.value() ), 'utf-8')
-        dframe +=  b'\r\n'
+recording_on = 0
+dac1_state = 0
+square1_min = 0
+square1_max = 0
+tim1 = None
+def dac_1_tick(timer):
+    global dac1
+    global dac1_state
+    global dac1
+    global square1_min
+    global square1_max
+    pyb.LED(1).toggle()
+    if dac1_state:
+        dac1.write(square1_min) 
+        dac1_state = 0
+    else:
+        dac1.write(square1_max) 
+        dac1_state = 1
         
-        dframe = b"Voice coil amp enable value: "
-        dframe +=  bytes( str( amp_enable.value() ), 'utf-8')
-        dframe +=  b'\r\n'
-        
-        dframe = b"Z limit switch value: "
-        dframe +=  bytes( str( z_limit_switch.value() ), 'utf-8')
-        dframe +=  b'\r\n'
-        
-        
-        conn.write(dframe)
-    
+def DAC_1_square( params ):
+    params = params.split(",")
+    global square1_min
+    global square1_max
+    global tim1
+    f = float( params[0] )
+    square1_min = int(params[1])
+    square1_max = int(params[2])
+    amp_enable.value(1)
+    pyb.LED(2).off()
+    tim1 = pyb.Timer(1)              # create a timer object using timer 4
+    tim1.init( freq = f)                # trigger at 2Hz
+    #tim.callback(lambda t:pyb.LED(1).toggle())
+    tim1.callback( dac_1_tick )
+    conn.write("DAC1 square wave started\r\n".encode('utf-8')) 
 
+dac2_state = 0
+square2_min = 0
+square2_max = 0
+tim2 = None
+def dac_2_tick(timer):
+    global dac2
+    global dac2_state
+    global dac2
+    global square2_min
+    global square2_max
+    pyb.LED(2).toggle()
+    if dac2_state:
+        dac2.write(square2_min) 
+        dac2_state = 0
+    else:
+        dac2.write(square2_max) 
+        dac2_state = 1
+def DAC_2_square( params):
+    params = params.split(",")
+    global square2_min
+    global square2_max
+    global tim2
+    f = float( params[0] )
+    square2_min = int(params[1])
+    square2_max = int(params[2])
+    amp_enable.value(1)
+    pyb.LED(2).off()
+    tim2 = pyb.Timer(2)              # create a timer object using timer 4
+    tim2.init( freq = f)                # trigger at 2Hz
+    #tim.callback(lambda t:pyb.LED(1).toggle())
+    tim2.callback( dac_2_tick )
+    conn.write("DAC1 square wave started\r\n".encode('utf-8')) 
+
+
+      
     
 def move_z(steps, direction):
     pyb.LED(1).on()
@@ -164,20 +216,7 @@ def raster_scan():
     dac2.write(0) 
     dac1.write(0) 
     conn.write(b"raster_end\r\n")
-    return 1
-def square():
-    led = pyb.LED(2)
-    i = 1
-    conn.write(b"square\r\n")
-    while True:
-        dac2.write((i) * 4095) 
-        dac1.write((i) * 4095) 
-        led.toggle()
-
-    i = not i
-    time.sleep_ms(10)      
-    
-    
+    return 1  
         
 def dither():
     global y_pos, x_pos
@@ -223,7 +262,22 @@ def dither():
 #Always homes z at startup
 #home_z()
 #MAIN LOOP WHICH NEVER EXITS
+recording_is_on = 0
+elapsed_time = 0
+serial_report_freq = 1000
+serial_send_interval = 1000000/serial_report_freq
+previous_time = time.ticks_us()
 while True:
+    elapsed_time = time.ticks_us() - previous_time
+    
+    if recording_is_on and elapsed_time > serial_send_interval:
+        previous_time = time.ticks_us()
+        dframe = bytes( "state," + str( time.ticks_us() ) +"," + str( dac1.read()) + "," + str( dac2.read()) + "," +  str(photodiode_ADC.read()), 'utf-8' )
+        dframe +=  b'\r\n'
+        conn.write(dframe)
+        
+    
+    
     data_read = conn.readline()
     if data_read:
         data_read = str(data_read, 'utf-8')
@@ -244,10 +298,6 @@ while True:
         if data_read == 'dither':
             recognized = 1
             dither() 
-            
-        if data_read == 'square':
-            recognized = 1
-            square() 
             
         if data_read == 'maxout': #set analog outputs to max
             recognized = 1
@@ -285,22 +335,6 @@ while True:
             conn.write("Amp has been disabled\r\n".encode('utf-8')) 
             
         
-        if  data_read == 'amp_on':
-            amp_enable.value(1)
-            recognized = 1
-            conn.write("Amp has been enabled\r\n".encode('utf-8')) 
-            
-        if  data_read == 'stepper_on':
-            stepper_enable.value(1)
-            recognized = 1
-            conn.write("Stepper has been enabled\r\n".encode('utf-8')) 
-        
-        if  data_read == 'stepper_off':
-            stepper_enable.value(0)
-            recognized = 1
-            conn.write("Stepper has been disabled\r\n".encode('utf-8')) 
-            
-        
         if data_read[0:6] == 'move_z':
             #conn.write("DOOOT\r\n".encode('utf-8')) 
             steps = data_read[6:]
@@ -324,11 +358,39 @@ while True:
             recognized = 1
             home_z() 
             
-        if data_read == 'read_settings':
+        if data_read[:11] == 'DAC1_square':
             recognized = 1
-            read_settings() 
+            DAC_1_square( data_read[11:] )
+        if data_read[:11] == 'DAC2_square':
+            recognized = 1
+            DAC_2_square( data_read[11:] )  
             
- 
+        if data_read[:9] == 'record_on':
+           recognized = 1
+           pyb.LED(1).toggle()
+           serial_report_freq = float( data_read[9:])
+           recording_is_on = 1
+           
+         
+        if data_read== 'record_off':
+           recognized = 1
+           recording_is_on = 0
+           
+            
+           
+        if data_read[:11] == 'Square_Stop':
+            recognized = 1
+            try:
+                tim1.deinit()
+            except:
+                pass
+            try:
+                tim2.deinit()
+            except:
+                pass
+            dac1.write( 2048 ) 
+            dac2.write( 2048 ) 
+        
  
         if not recognized:
             response = "command is not recognized: " + data_read + "\r\n"

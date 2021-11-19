@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>FiberActuatorController</class>
- <widget class="QMainWindow" name="FiberActuatorController">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>797</width>
-    <height>341</height>
+    <width>557</width>
+    <height>416</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,142 +15,149 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="8" column="0" colspan="4">
-     <widget class="QTextBrowser" name="textBrowser"/>
-    </item>
-    <item row="3" column="3">
+    <item row="3" column="2">
      <widget class="QPushButton" name="pushButton_Set_DAC_2">
       <property name="text">
        <string>Set DAC 2</string>
       </property>
      </widget>
     </item>
-    <item row="3" column="0">
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>     DAC 2 Value0 to 4096</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="text">
-       <string>     DAC1 Value 0 to 4096</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="3">
-     <widget class="QPushButton" name="pushButton_Connect">
-      <property name="text">
-       <string>Connect</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="3">
+    <item row="1" column="2">
      <widget class="QPushButton" name="pushButton_Step">
       <property name="text">
        <string>Step</string>
       </property>
      </widget>
     </item>
-    <item row="6" column="3">
-     <widget class="QPushButton" name="pushButton_Home_Z">
+    <item row="0" column="2">
+     <widget class="QPushButton" name="pushButton_Connect">
       <property name="text">
-       <string>Home Z</string>
+       <string>Connect</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="3">
+    <item row="0" column="0" colspan="2">
+     <widget class="QComboBox" name="comboBox_Port_Select"/>
+    </item>
+    <item row="1" column="0" colspan="2">
+     <widget class="QLineEdit" name="lineEdit_steps">
+      <property name="text">
+       <string>number of steps (may be negative)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="0" colspan="2">
+     <widget class="QLineEdit" name="lineEdit_DAC1">
+      <property name="text">
+       <string>DAC 1 Value (0 to 4096)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="2" column="2">
      <widget class="QPushButton" name="pushButton_Set_DAC_1">
       <property name="text">
        <string>Set DAC 1</string>
       </property>
      </widget>
     </item>
-    <item row="7" column="3">
+    <item row="3" column="0" colspan="2">
+     <widget class="QLineEdit" name="lineEdit_DAC2">
+      <property name="text">
+       <string>DAC 2 Value (0 to 4096)</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="2">
+     <widget class="QLineEdit" name="lineEdit_max">
+      <property name="text">
+       <string>max</string>
+      </property>
+     </widget>
+    </item>
+    <item row="5" column="2">
+     <widget class="QPushButton" name="pushButton_Home_Z">
+      <property name="text">
+       <string>Home Z</string>
+      </property>
+     </widget>
+    </item>
+    <item row="9" column="0">
+     <widget class="QPushButton" name="pushButton_DAC1_square">
+      <property name="text">
+       <string>DAC 1 Square Wave</string>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="0" colspan="3">
+     <widget class="QTextBrowser" name="textBrowser"/>
+    </item>
+    <item row="6" column="2">
      <widget class="QPushButton" name="pushButton_read_serial_number">
       <property name="text">
        <string>Read Serial Number</string>
       </property>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="label">
-      <property name="text">
-       <string>     Number of steps</string>
-      </property>
-     </widget>
-    </item>
-    <item row="3" column="1" colspan="2">
-     <widget class="QLineEdit" name="lineEdit_DAC2">
-      <property name="text">
-       <string>2048</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="1" colspan="2">
-     <widget class="QLineEdit" name="lineEdit_DAC1">
-      <property name="text">
-       <string>2048</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1" colspan="2">
-     <widget class="QLineEdit" name="lineEdit_steps">
-      <property name="text">
-       <string>100</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="0">
-     <widget class="QPushButton" name="pushButton_amp_on">
-      <property name="text">
-       <string>Voice coil Amplifier Enable</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="1">
-     <widget class="QPushButton" name="pushButton_amp_off">
-      <property name="text">
-       <string>Voice Coil Amplifier Disable</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="2">
+    <item row="5" column="0">
      <widget class="QPushButton" name="pushButton_hello">
       <property name="text">
        <string>Hello</string>
       </property>
      </widget>
     </item>
-    <item row="7" column="0">
-     <widget class="QPushButton" name="pushButton_stepper_on">
+    <item row="5" column="1">
+     <widget class="QPushButton" name="pushButton_amp_off">
       <property name="text">
-       <string>Stepper Enable</string>
+       <string>Amplifier Off</string>
       </property>
      </widget>
     </item>
-    <item row="7" column="1">
-     <widget class="QPushButton" name="pushButton_stepper_off">
+    <item row="9" column="2">
+     <widget class="QPushButton" name="pushButton_Square_Stop">
       <property name="text">
-       <string>Stepper Disable</string>
+       <string>Stop Square Wave</string>
       </property>
      </widget>
     </item>
-    <item row="7" column="2">
-     <widget class="QPushButton" name="pushButton_read_settings">
+    <item row="9" column="1">
+     <widget class="QPushButton" name="pushButton_DAC2_square">
       <property name="text">
-       <string>Read Settings</string>
+       <string>DAC 2 Square Wave</string>
       </property>
      </widget>
     </item>
-    <item row="0" column="1" colspan="2">
-     <widget class="QComboBox" name="comboBox_Port_Select"/>
-    </item>
-    <item row="0" column="0">
-     <widget class="QLabel" name="label_4">
+    <item row="8" column="1">
+     <widget class="QLineEdit" name="lineEdit_min">
       <property name="text">
-       <string>   Serial Port Select</string>
+       <string>min</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="0">
+     <widget class="QLineEdit" name="lineEdit_f">
+      <property name="text">
+       <string>frequency</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="2">
+     <widget class="QPushButton" name="pushButton_recording_on">
+      <property name="text">
+       <string>Start Recording</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="0">
+     <widget class="QLineEdit" name="lineEdit_filename">
+      <property name="text">
+       <string>filename.txt</string>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1">
+     <widget class="QLineEdit" name="lineEdit_recording_frequency">
+      <property name="text">
+       <string>recording frequency</string>
       </property>
      </widget>
     </item>
@@ -161,7 +168,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>797</width>
+     <width>557</width>
      <height>21</height>
     </rect>
    </property>
