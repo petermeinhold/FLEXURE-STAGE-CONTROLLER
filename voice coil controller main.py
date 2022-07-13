@@ -27,6 +27,7 @@ class Fiber_actuator_controller(object):
         self.gradient_ascent_amplitude = 0
         self.gradient_ascent_on = False
         self.gradient_ascent_threashold = 0
+        self.ADC_delay_us = 0
         self.leds = [0,0,0,1]
         self.ni_control_adc = pyb.ADC(pyb.Pin.board.X11)  
         self.adc_reading_up = 0 
@@ -52,10 +53,10 @@ class Fiber_actuator_controller(object):
         self.led3 = pyb.LED(3) 
         self.led4 = pyb.LED(4)  
         
-        self.sn1 = Pin('X18', Pin.IN)#Pin.PULL_UP
-        self.sn2 = Pin('X19', Pin.IN)
-        self.sn3 = Pin('X20', Pin.IN)
-        self.sn4 = Pin('X21', Pin.IN)
+        self.sn1 = Pin('X18', Pin.IN, Pin.PULL_UP)#Pin.PULL_UP
+        self.sn2 = Pin('X19', Pin.IN, Pin.PULL_UP)
+        self.sn3 = Pin('X20', Pin.IN, Pin.PULL_UP)
+        self.sn4 = Pin('X21', Pin.IN, Pin.PULL_UP)
         
         self.limit_switch_pin = Pin('X12', Pin.IN)
         self.dir_pin = Pin('X9', Pin.OUT_PP)
@@ -91,9 +92,6 @@ class Fiber_actuator_controller(object):
     def DEFAULT_CB(self, tim): #not currently used
         self.led1.toggle()
   
-    def sine_callback(self, tim ):
-        a = 6
-        
         
     def SQUARE_BOTH_CB(self, tim):
         self.led3.toggle()
@@ -143,63 +141,70 @@ class Fiber_actuator_controller(object):
         #    if self.sig_square_on:
             
     def dither_cb(self, tim):
-    
         #read ni_in at up right left and down positions
-        if self.dither_state == 0: #dither up (+y)
-            self.leds[0] = 0
-            self.leds[1] = 0
-            self.leds[2] = 0
-            self.leds[3] = 1
-            self.x_dac.write(self.x_position)
-            self.y_dac.write(self.y_position + self.dither_amplitude)
-            self.adc_reading_up = self.ni_control_adc.read()
-        if self.dither_state == 1: #dither right (+x)
-            self.leds[0] = 0
-            self.leds[1] = 0
-            self.leds[2] = 1
-            self.leds[3] = 0
-            self.x_dac.write(0)
-            self.x_dac.write(self.x_position + self.dither_amplitude)
-            self.y_dac.write(self.dither_amplitude)
-            self.adc_reading_right = self.ni_control_adc.read()
-        if self.dither_state == 2: #dither down (-y)
-            self.leds[0] = 0
-            self.leds[1] = 1
-            self.leds[2] = 0
-            self.leds[3] = 0
-            self.x_dac.write(self.x_position)
-            self.y_dac.write(self.y_position - self.dither_amplitude)
-            self.adc_reading_down = self.ni_control_adc.read()
-        if self.dither_state == 3: #dither left (-x)
-            self.leds[0] = 1
-            self.leds[1] = 0
-            self.leds[2] = 0
-            self.leds[3] = 0
-            self.x_dac.write(self.x_position - self.dither_amplitude)
-            self.y_dac.write(self.y_position)
-            self.adc_reading_left = self.ni_control_adc.read()
+        #if self.dither_state == 0: #dither up (+y)
+        #self.leds[0] = 0
+        #self.leds[1] = 0
+        #self.leds[2] = 0
+        #self.leds[3] = 1
+        self.x_dac.write(self.x_position)
+        self.y_dac.write(self.y_position + self.dither_amplitude)
+        time.sleep_us( self.ADC_delay_us )
+        self.adc_reading_up = self.ni_control_adc.read()
+        #if self.dither_state == 1: #dither right (+x)
+        #self.leds[0] = 0
+        #self.leds[1] = 0
+        #self.leds[2] = 1
+        #self.leds[3] = 0
+        self.x_dac.write(0)
+        self.x_dac.write(self.x_position + self.dither_amplitude)
+        self.y_dac.write(self.dither_amplitude)
+        time.sleep_us( self.ADC_delay_us )
+        self.adc_reading_right = self.ni_control_adc.read()
+        #if self.dither_state == 2: #dither down (-y)
+        #self.leds[0] = 0
+        #elf.leds[1] = 1
+        #self.leds[2] = 0
+        #elf.leds[3] = 0
+        self.x_dac.write(self.x_position)
+        self.y_dac.write(self.y_position - self.dither_amplitude)
+        time.sleep_us( self.ADC_delay_us )
+        self.adc_reading_down = self.ni_control_adc.read()
+        #if self.dither_state == 3: #dither left (-x)
+        self.leds[0] = 1
+        self.leds[1] = 0
+        self.leds[2] = 0
+        self.leds[3] = 0
+        self.x_dac.write(self.x_position - self.dither_amplitude)
+        self.y_dac.write(self.y_position)
+        time.sleep_us( self.ADC_delay_us )
+        self.adc_reading_left = self.ni_control_adc.read()
             
         #gradient ascent
-        if self.adc_reading_left - self.adc_reading_right > self.gradient_ascent_threashold:
-            self.x_position += self.gradient_ascent_amplitude
-        if self.adc_reading_left - self.adc_reading_right < -self.gradient_ascent_threashold:
-            self.x_position -= self.gradient_ascent_amplitude
-        if self.adc_reading_up - self.adc_reading_down > self.gradient_ascent_threashold:
-            self.y_position += self.gradient_ascent_amplitude
-        if self.adc_reading_up - self.adc_reading_down < -self.gradient_ascent_threashold:
-            self.y_position -= self.gradient_ascent_amplitude
+        if self.gradient_ascent_on:
+            if abs(self.adc_reading_up-self.adc_reading_down) > self.gradient_ascent_threashold:
+                if self.adc_reading_up > self.adc_reading_down:
+                    self.y_position += self.gradient_ascent_amplitude
+                else:
+                    self.y_position -= self.gradient_ascent_amplitude
+            if abs(self.adc_reading_left-self.adc_reading_right) > self.gradient_ascent_threashold:
+                if self.adc_reading_right > self.adc_reading_left:
+                    self.x_position += self.gradient_ascent_amplitude
+                else:
+                    self.x_position -= self.gradient_ascent_amplitude
         
+        boarder = self.gradient_ascent_amplitude + self.dither_amplitude
         #keep position in bounds
-        if self.x_position > 4095:
-            self.x_position = 4095
-        if self.x_position < 0:
-            self.x_position = 0
-        if self.y_position > 4095:
-            self.y_position = 4095
-        if self.y_position < 0:
-            self.y_position = 0
+        if self.x_position > 4095 - boarder:
+            self.x_position = 4095 - boarder
+        if self.x_position < boarder:
+            self.x_position = boarder
+        if self.y_position > 4095 - boarder:
+            self.y_position = 4095 - boarder
+        if self.y_position < boarder:
+            self.y_position = boarder
         
-            
+        """ 
         if self.leds[0]:
             self.led1.on()
         else:
@@ -215,26 +220,14 @@ class Fiber_actuator_controller(object):
         if self.leds[3]:
             self.led4.on()
         else:
-            self.led4.off()
-            
+            self.led4.off()            
         self.dither_state = (self.dither_state + 1) % 4
-        
-        if self.gradient_ascent_on:
-            a = 5
+        """
+
+                    
 
     def home_z(self):  
-        self.dir_pin.value( 0 )         
-        for step in range(500):
-            time.sleep_ms( 10 )
-            self.step_pin.low()        
-            time.sleep_ms( 10 )  
-            self.step_pin.low()    
-            self.led4.toggle()
-            if self.limit_switch_pin.value():
-                conn.write( 'home complete\r\n'.encode() )  
-                return 1
-        conn.write( 'did not hit limit switch\r\n'.encode() )  
-        return 0
+        self.move_z(10000)
             
     def move_z(self):  
         direction = 0
@@ -267,12 +260,16 @@ class Fiber_actuator_controller(object):
             self.timer = None 
         self.X_dac.write(0)
         self.Y_dac.write(0)
+    def set_DACs(self):
+        self.x_dac.write(self.x_position)
+        self.x_dac.write(self.y_position)
+        
         
     def get_serial_number(self):
         self.led3.toggle()
         self.led4.toggle()
         self.serial_number = str(self.sn1.value())+str(self.sn2.value())+str(self.sn3.value())+str(self.sn4.value())
-        conn.write( ('serial_number,' + self.serial_number+'\r\n').encode() )
+        conn.write( ('serial_number,' + self.serial_number+',end\r\n').encode() )
 
 
     def send_state(self):
@@ -338,13 +335,20 @@ while True:
                 understood = 1
                 my_controller.home_z()
                 conn.write( 'home z completed\r\n'.encode() )  
+             
+            if datalist[0]=='DAC_set':
+                understood = 1
+                my_controller.x_position = int( float(datalist[1] ) )
+                my_controller.yx_positionx_position_position = int( float(datalist[2] ) )
+                my_controller.set_DACs()
+                conn.write( 'DAC set complete\r\n'.encode() )  
                 
             if datalist[0]=='move_z':
                 understood = 1
-                my_controller.n_steps = int( float(datalist[1] ))
-                my_controller.step_delay = float(datalist[2])
+                my_controller.n_steps = int( float(datalist[1] ) )
+                my_controller.step_delay = int( float(datalist[2] ) )
                 my_controller.move_z()
-                conn.write( 'z move completed\r\n'.encode() )  
+                conn.write( 'z move complete\r\n'.encode() )  
                 
             
             if datalist[0]=='signal_generator':
@@ -387,11 +391,9 @@ while True:
                         
                                     
                 conn.write( (str(my_controller.frequency) + ',' + str(my_controller.amplitude) + '  signal_generator starting\r\n').encode() )  
-                
-      
-        
+ 
             if datalist[0] == 'dither_start':
-                #dither freq, dither amp, gradient ascent on/off, ascent step size
+                #dither freq, dither amp, gradient ascent on/off, ascent step size, ascent threshold, adc delay
                 understood = 1
                 my_controller.frequency = float( datalist[1] )
                 my_controller.amplitude = int( datalist[2] * 4095 )
@@ -399,6 +401,7 @@ while True:
                 my_controller.gradient_ascent_on =  datalist[3] == '1'
                 my_controller.gradient_ascent_amplitude = int( datalist[3] )
                 my_controller.gradient_ascent_threashold = int( datalist[3] )
+                my_controller.ADC_delay_us = int( datalist[3] )
                 
                 conn.write( 'dither starting\r\n'.encode() )  
                 my_controller.new_timer()
