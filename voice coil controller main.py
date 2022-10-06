@@ -9,11 +9,10 @@ import array
 conn = pyb.USB_VCP()
 conn.setinterrupt(-1)
 
-
+#test change
 class Fiber_actuator_controller(object):
 
     def __init__(self):
-        self.mode = 0
         self.sig_square_on = 0
         self.sig_x_on = 0
         self.sig_y_on = 0
@@ -141,44 +140,29 @@ class Fiber_actuator_controller(object):
         #    if self.sig_square_on:
             
     def dither_cb(self, tim):
-        #read ni_in at up right left and down positions
-        #if self.dither_state == 0: #dither up (+y)
-        #self.leds[0] = 0
-        #self.leds[1] = 0
-        #self.leds[2] = 0
-        #self.leds[3] = 1
         self.x_dac.write(self.x_position)
         self.y_dac.write(self.y_position + self.dither_amplitude)
         time.sleep_us( self.ADC_delay_us )
         self.adc_reading_up = self.ni_control_adc.read()
-        #if self.dither_state == 1: #dither right (+x)
-        #self.leds[0] = 0
-        #self.leds[1] = 0
-        #self.leds[2] = 1
-        #self.leds[3] = 0
+
+
         self.x_dac.write(0)
         self.x_dac.write(self.x_position + self.dither_amplitude)
-        self.y_dac.write(self.dither_amplitude)
+        self.y_dac.write(self.y_position )
         time.sleep_us( self.ADC_delay_us )
         self.adc_reading_right = self.ni_control_adc.read()
-        #if self.dither_state == 2: #dither down (-y)
-        #self.leds[0] = 0
-        #elf.leds[1] = 1
-        #self.leds[2] = 0
-        #elf.leds[3] = 0
+
         self.x_dac.write(self.x_position)
         self.y_dac.write(self.y_position - self.dither_amplitude)
         time.sleep_us( self.ADC_delay_us )
         self.adc_reading_down = self.ni_control_adc.read()
-        #if self.dither_state == 3: #dither left (-x)
-        self.leds[0] = 1
-        self.leds[1] = 0
-        self.leds[2] = 0
-        self.leds[3] = 0
+        
         self.x_dac.write(self.x_position - self.dither_amplitude)
-        self.y_dac.write(self.y_position)
+        self.y_dac.write(self.y_position )
         time.sleep_us( self.ADC_delay_us )
         self.adc_reading_left = self.ni_control_adc.read()
+        
+
             
         #gradient ascent
         if self.gradient_ascent_on:
@@ -205,10 +189,7 @@ class Fiber_actuator_controller(object):
             self.y_position = boarder
         
 
-                    
 
-    def home_z(self):  
-        self.move_z(10000)
             
     def move_z(self):  
         direction = 0
@@ -217,11 +198,12 @@ class Fiber_actuator_controller(object):
             direction = 1
         self.dir_pin.value( direction )         
         for step in range(self.n_steps):
+            self.led3.toggle()
+            self.led4.toggle()
             time.sleep_ms( self.step_delay ) 
             self.step_pin.low()        
             time.sleep_ms( self.step_delay ) 
-            self.step_pin.low()     
-            self.led4.toggle()
+            self.step_pin.high()     
             if self.limit_switch_pin.value():
                 conn.write( 'limit switch hit\r\n'.encode() )  
                 return 0
@@ -242,6 +224,10 @@ class Fiber_actuator_controller(object):
         self.X_dac.write(0)
         self.Y_dac.write(0)
     def set_DACs(self):
+        self.led3.toggle()
+        self.led4.toggle()
+        #self.x_dac.write(4000)
+        #self.x_dac.write(4000)
         self.x_dac.write(self.x_position)
         self.x_dac.write(self.y_position)
         
@@ -320,22 +306,22 @@ while True:
             if datalist[0]=='DAC_set':
                 understood = 1
                 my_controller.x_position = int( float(datalist[1] ) )
-                my_controller.yx_positionx_position_position = int( float(datalist[2] ) )
+                my_controller.y_position = int( float(datalist[2] ) )
                 my_controller.set_DACs()
-                conn.write( 'DAC set complete\r\n'.encode() )  
+                conn.write( (datalist[1] + ',' + datalist[2] + ', DAC set complete\r\n').encode() )  
                 
             if datalist[0]=='move_z':
                 understood = 1
                 my_controller.n_steps = int( float(datalist[1] ) )
                 my_controller.step_delay = int( float(datalist[2] ) )
                 my_controller.move_z()
-                conn.write( 'z move complete\r\n'.encode() )  
+                conn.write( (str(datalist[1]) + ',' + str(datalist[2]) + ',z move complete\r\n').encode() )  
                 
             
             if datalist[0]=='signal_generator':
                 #square, x, y, frequency, amplitude
                 understood = 1
-                my_controller.sig_square_on = int( datalist[1] )
+                my_controller.sig_ssquare_on = int( datalist[1] )
                 my_controller.sig_x_on = int( datalist[2] )
                 my_controller.sig_y_on = int( datalist[3] )
                 my_controller.frequency = float( datalist[4] )
@@ -405,7 +391,7 @@ while True:
 
 
             if not understood:
-                conn.write( 'Did not understand: '.encode() )
+                conn.write( 'FTA Did not understand: '.encode() )
                 conn.write( data_read )
 
 
