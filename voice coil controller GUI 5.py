@@ -43,7 +43,8 @@ class Fiber_actuator( QObject ): #subclass of QObject so it has its own port, si
         self.send('get_serial_number')
         self.serial.waitForReadyRead( 500 )
         #time.sleep(.5)
-    
+
+
     def receive(self):
         while self.serial.canReadLine():
             text = self.serial.readLine().data().decode()
@@ -71,7 +72,7 @@ class Fiber_actuator( QObject ): #subclass of QObject so it has its own port, si
     def move_z(self, steps, delay):
         message = 'move_z,' + steps + ',' + delay
         self.send( message )        
-    def dac_set(self, x, y):
+    def DAC_set(self, x, y):
         message = 'DAC_set,'+  x + ',' + y
         self.send( message )
     
