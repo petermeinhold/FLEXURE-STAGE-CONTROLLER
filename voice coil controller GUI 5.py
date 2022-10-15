@@ -181,6 +181,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         
 #GUI FUNCTIONS       
+
+            
+        
+        
     def refresh_ports(self):
         #serial port combo box setup
         self.port_combo_box.clear()
@@ -313,7 +317,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         to_send = ( text  + '\r\n').encode()
         print("sending" , to_send)
         self.received_text.setPlainText( self.received_text.toPlainText() +   '<<<  ' + text + '\r\n' )
-        self.serial.write( to_send )     
+        self.selected_actuator.serial.write( to_send )     
         
     @QtCore.pyqtSlot()
     def send_text_from_box(self):
