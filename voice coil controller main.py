@@ -5,6 +5,7 @@ import machine
 import time
 import pyb
 import array
+from time import sleep
 
 conn = pyb.USB_VCP()
 conn.setinterrupt(-1)
@@ -39,6 +40,7 @@ class Fiber_actuator_controller(object):
         self.X_dac = DAC(1, bits=12) #pin X5
         self.Y_dac =DAC(2, bits=12)  #pin X6
         self.drive_enable_output = Pin('X8', Pin.OUT_PP)
+        print('disable step driver')
         self.drive_enable_output.low()
         self.amp_enable_output = Pin('X4', Pin.OUT_PP)
         self.amp_enable_output.low()
@@ -196,7 +198,7 @@ class Fiber_actuator_controller(object):
         if self.n_steps < 0:
             self.n_steps = -self.n_steps
             direction = 1
-        self.dir_pin.value( direction )         
+        self.dir_pin.value( direction )     
         for step in range(self.n_steps):
             self.led3.toggle()
             self.led4.toggle()
@@ -216,7 +218,7 @@ class Fiber_actuator_controller(object):
         else:
             self.timer = pyb.Timer(4)    
     def stop(self):
-        self.drive_enable_output.low()
+        self.amp_enable_output.low()
         self.drive_enable_output.low()
         if self.timer is not None:
             self.timer.deinit()
@@ -261,13 +263,13 @@ my_controller = Fiber_actuator_controller()
 my_controller.led1.toggle()
 
 
-dac1req='0000'
-dac2req='0000'
+dac1req='2048'
+dac2req='2048'
 
 while True:
     data_read = conn.readline()
     if data_read:
-            my_controller.stop()   
+            #my_controller.stop()   
             my_controller.led1.toggle()
             my_controller.led2.toggle()
             my_controller.led3.toggle()
